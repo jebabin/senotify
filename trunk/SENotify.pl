@@ -88,7 +88,7 @@ while (sleep $opts{'refresh'}) {
 		my $i = 0;
 		while($moredata) {
 			$i++;
-			print 'http://api.'.$site.'.com/0.8/questions?sort=creation&order=asc&fromdate='.$lastquestionts{$site}.'&pagesize=10&page=1&key='.$key . "\n";
+
 			my $req = HTTP::Request->new(GET => 'http://api.'.$site.'.com/0.8/questions?sort=creation&order=asc&fromdate='.$lastquestionts{$site}.'&pagesize=10&page=1&key='.$key);
 			my $res = $ua->request($req);
 		
