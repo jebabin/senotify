@@ -25,7 +25,6 @@ use strict;
 use warnings;
 
 use JSON;
-use Data::Dumper;
 use Getopt::Long;
 use Compress::Zlib;
 use LWP::UserAgent;
@@ -66,6 +65,9 @@ if (defined($opts{'help'})) {
 	print STDERR "    -e,--excludetag  Exclude question contains these tags\n";
 	print STDERR "                     can be repeated many time\n";
 	print STDERR "    -r,--refresh     Refresh rate in seconds, default to 300 seconds\n";
+	print STDERR "\n";
+	print STDERR "Example :	perl SENotify.pl -g -e windows-7 -e outlook -s superuser\n";
+	print STDERR "		Will show every 300 seconds new question of superuser excluding one with tag outlook or windows-7\n";
 	exit;
 }
 
@@ -115,17 +117,18 @@ while (sleep $opts{'refresh'}) {
 					if ($opts{'growl'}) {
 						if ($^O eq 'darwin') {
 							open(OUT, '| growlnotify -n SENotify --image '.dirname(rel2abs($0)).'/logo/'.$site.'.png') or warn "Error: Couldn't open the pipe to growlnotify $!";
-							print OUT '(v:'. $i->{view_count} .'|a:'. $i->{answer_count} . ') ' .$i->{title} . "\n";
-							print OUT '['.join('] [',@{$i->{tags}}).']' . "\n";
+							print OUT $i->{title} . "\n";
+							print OUT '['.join('] [',@{$i->{tags}}).'] (v:'. $i->{view_count} .'|a:'. $i->{answer_count} . ')' . "\n";
 							close(OUT);
 						} elsif ($^O eq 'MSWin32')  {
-							my $message = '"(v:'. $i->{view_count} .'|a:'. $i->{answer_count} . ') ' .$i->{title} . '\n['.join('] [',@{$i->{tags}}).']"';
-							system($growlnotifypath, '/i:'.dirname(rel2abs($0)).'/logo/'.$site.'.png', $message);	
+							my $message = '"['.join('] [',@{$i->{tags}}).'] (v:'. $i->{view_count} .'|a:'. $i->{answer_count} . ')"';
+							my $title = '"'.$i->{title} . '"';
+							system($growlnotifypath, '/cu:http://www.'.$site.'.com/questions/'.$i->{question_id}, '/a:SENotify', '/r:SENotify', '/n:SENotify', '/i:'.dirname(rel2abs($0)).'/logo/'.$site.'.png', "/t:$title", $message);	
 						}
 					}
 										
-					print '(v:'. $i->{view_count} .'|a:'. $i->{answer_count} . ') ' .$i->{title} . "\n";
-					print '['.join('] [',@{$i->{tags}}).']' . "\n";
+					print $i->{title} . "\n";
+					print '['.join('] [',@{$i->{tags}}).'] (v:'. $i->{view_count} .'|a:'. $i->{answer_count} . ')'. "\n";
 					print 'http://www.'.$site.'.com/questions/'.$i->{question_id}."\n";
 					print "\n";
 		
@@ -141,6 +144,12 @@ while (sleep $opts{'refresh'}) {
 __END__
 
 History (not following commit revision)
+
+Revision 0.3 - 2010/06/22
+- Improve Growl for Windows output
+- Show count value (view/answer) after tag list for a better question visibility
+- Add a readme file
+- Add usage example
 
 Revision 0.2 - 2010/06/22
 - Add proxy support
