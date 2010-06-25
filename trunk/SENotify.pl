@@ -76,7 +76,7 @@ if ($opts{'growl'} && ($^O ne 'darwin') && ($^O ne 'MSWin32')) {
 }
 
 my $ua = LWP::UserAgent->new;
-$ua->agent("SENotify/0.2");
+$ua->agent("SENotify/0.4");
 $ua->env_proxy();
 
 my %lastquestionts;
@@ -91,7 +91,7 @@ while (sleep $opts{'refresh'}) {
 		while($moredata) {
 			$i++;
 
-			my $req = HTTP::Request->new(GET => 'http://api.'.$site.'.com/0.8/questions?sort=creation&order=asc&fromdate='.$lastquestionts{$site}.'&pagesize=10&page=1&key='.$key);
+			my $req = HTTP::Request->new(GET => 'http://api.'.$site.'.com/0.9/questions?sort=creation&order=asc&fromdate='.$lastquestionts{$site}.'&pagesize=10&page=1&key='.$key);
 			my $res = $ua->request($req);
 		
 			if ($res->is_success) {
@@ -144,6 +144,9 @@ while (sleep $opts{'refresh'}) {
 __END__
 
 History (not following commit revision)
+
+Revision 0.4 - 2010/06/25
+- Use API 0.9
 
 Revision 0.3 - 2010/06/22
 - Improve Growl for Windows output
