@@ -43,16 +43,20 @@ my $growlnotifypath = '"C:\Program Files\Growl for Windows\growlnotify"'; # For 
 $default_config{'site'} = ['serverfault', 'superuser']; # serverfault | stackoverflow | superuser | meta.stackoverflow | stackapps
 $default_config{'refresh'} = '300';
 $default_config{'growl'} = '0';
+$default_config{'verbose'} = '0';
 $default_config{'excludetag'} = [];
+$default_config{'includetag'} = [];
 
 ###### Do not edit bellow
 
-GetOptions(\%opts, 'site|s=s@', 'excludetag|e=s@', 'refresh|r=i', 'growl|g', 'help|h');
+GetOptions(\%opts, 'site|s=s@', 'excludetag|e=s@', 'includetag|i=s@', 'refresh|r=i', 'growl|g', 'verbose|v', 'help|h');
 
 $opts{'site'} = $opts{'site'}               || $default_config{'site'};
 $opts{'refresh'} = $opts{'refresh'}         || $default_config{'refresh'};
 $opts{'growl'} = $opts{'growl'}             || $default_config{'growl'};
+$opts{'verbose'} = $opts{'verbose'}         || $default_config{'verbose'};
 $opts{'excludetag'} = $opts{'excludetag'}   || $default_config{'excludetag'};
+$opts{'includetag'} = $opts{'includetag'}   || $default_config{'includetag'};
 
 if (defined($opts{'help'})) {
 	print STDERR "Usage: $0 [-r refresh] [-g] [[-e tag] [-e tag] ... ] [[-s site] [-s site] ... ]\n";
@@ -62,9 +66,12 @@ if (defined($opts{'help'})) {
 	print STDERR "    -g,--growl       Enable growl notification (need growlnotify)\n";
 	print STDERR "                     Growl for mac : http://growl.info/\n";
 	print STDERR "                     Growl for windows : http://www.growlforwindows.com/\n";
-	print STDERR "    -e,--excludetag  Exclude question contains these tags\n";
+	print STDERR "    -e,--excludetag  Exclude question that contains these tags\n";
+	print STDERR "                     can be repeated many time\n";
+	print STDERR "    -i,--includetag  Only include question that contains these tags\n";
 	print STDERR "                     can be repeated many time\n";
 	print STDERR "    -r,--refresh     Refresh rate in seconds, default to 300 seconds\n";
+	print STDERR "    -v,--verbose     Show information regarding number of question found\n";
 	print STDERR "\n";
 	print STDERR "Example :	perl SENotify.pl -g -e windows-7 -e outlook -s superuser\n";
 	print STDERR "		Will show every 300 seconds new question of superuser excluding one with tag outlook or windows-7\n";
@@ -99,20 +106,27 @@ while (sleep $opts{'refresh'}) {
 				my $result = decode_json($unzipped);
 	
 				$moredata = 0 if ($result->{'total'} <= $result->{'pagesize'});
-				print $result->{'total'} . " question found on $site at : " . localtime() . "\n\n" if ($i == 1);
-		
+				print $result->{'total'} . " question".(($result->{'total'} > 1) ? 's' : '')." found on $site at : " . localtime() . "\n\n" if (($i == 1) && ($opts{'verbose'}));
+
 				foreach my $i (@{$result->{questions}}) {
-					my $skip = 0;
+					my $eskip = 0;
+					my $iskip = 1;
+
+					$iskip = 0 if ($#includedtag == 0);
 
 					foreach my $qtag (@{$i->{'tags'}}) {
+						foreach my $includedtag (@{$opts{'includetag'}}) {
+							$iskip = 0 if ($includedtag eq $qtag);
+						}
 						foreach my $excludedtag (@{$opts{'excludetag'}}) {
-							$skip = 1 if ($excludedtag eq $qtag);
+							$eskip = 1 if ($excludedtag eq $qtag);
 						}
 					}
 
-					$lastquestionts{$site} = $i->{creation_date} + 1; # Bad Hack - Could make question to be lost if two question has same creation_id			
+					$lastquestionts{$site} = $i->{creation_date} + 1; # Bad Hack - Could make question to be lost if two question has same creation_id		
 
-					next if $skip;
+					next if $eskip;
+					next if $iskip;
 					
 					if ($opts{'growl'}) {
 						if ($^O eq 'darwin') {
@@ -144,6 +158,10 @@ while (sleep $opts{'refresh'}) {
 __END__
 
 History (not following commit revision)
+
+Revision 0.5 - 2010/06/28
+- Add tag inclusion filter
+- Add verbose mode, need to be enable to see number of question found.
 
 Revision 0.4 - 2010/06/25
 - Use API 0.9
