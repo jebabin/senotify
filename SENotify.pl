@@ -112,7 +112,7 @@ while (sleep $opts{'refresh'}) {
 					my $eskip = 0;
 					my $iskip = 1;
 
-					$iskip = 0 if ($#{$opts{'includedtag'}} == 0);
+					$iskip = 0 if ($#{$opts{'includedtag'}} == -1);
 
 					foreach my $qtag (@{$i->{'tags'}}) {
 						foreach my $includedtag (@{$opts{'includetag'}}) {
