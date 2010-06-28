@@ -83,7 +83,7 @@ if ($opts{'growl'} && ($^O ne 'darwin') && ($^O ne 'MSWin32')) {
 }
 
 my $ua = LWP::UserAgent->new;
-$ua->agent("SENotify/0.4");
+$ua->agent("SENotify/0.5");
 $ua->env_proxy();
 
 my %lastquestionts;
